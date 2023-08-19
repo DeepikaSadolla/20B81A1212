@@ -1,0 +1,57 @@
+import React, { useState, useEffect } from 'react';
+import { Container, Typography, Grid } from '@mui/material';
+import TrainCard from './TrainCard';
+
+const AllTrains = () => {
+  const [trains, setTrains] = useState([]);
+
+  useEffect(() => {
+    // Fetch data from your backend API and set it to the 'trains' state
+    // Example: fetch('/api/trains').then(response => response.json()).then(data => setTrains(data));
+  }, []);
+
+  return (
+    <Container>
+      <Typography variant="h4" gutterBottom>
+        All Trains Schedule
+      </Typography>
+      <Grid container spacing={3}>
+        {trains.map(train => (
+          <TrainCard key={train.id} train={train} />
+        ))}
+      </Grid>
+    </Container>
+  );
+};
+
+export default AllTrains;
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Container, Typography } from '@mui/material';
+import TrainDetails from './TrainDetails';
+
+const SingleTrain = () => {
+  const { trainId } = useParams();
+  const [train, setTrain] = useState(null);
+
+  useEffect(() => {
+    // Fetch data for the specific train using the 'trainId' and set it to the 'train' state
+    // Example: fetch(`/api/trains/${trainId}`).then(response => response.json()).then(data => setTrain(data));
+  }, [trainId]);
+
+  return (
+    <Container>
+      {train ? (
+        <TrainDetails train={train} />
+      ) : (
+        <Typography variant="h6">Loading...</Typography>
+      )}
+    </Container>
+  );
+};
+
+export default SingleTrain;
