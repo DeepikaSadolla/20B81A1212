@@ -1,42 +1,37 @@
-const express = require('express');
+ 
+ const express = require('express');
 const axios = require('axios');
-
 const app = express();
-const port = process.env.PORT || 3000;
-
+const port = 3000;
 app.get('/numbers', async (req, res) => {
   const urls = req.query.url;
-
   if (!urls) {
     return res.status(400).json({ error: 'No URLs provided' });
   }
-
-  const start = Date.now();
-
+  const urlList = Array.isArray(urls) ? urls : [urls];
+  const fetchPromises = urlList.map(async url => {
+    try {
+      const response = await axios.get(url);
+      return response.data.numbers;
+    } catch (error) {
+      // Ignore failed requests
+      return [];
+    }
+  });
   try {
-    const promises = urls.map(async url => {
-      try {
-        const response = await axios.get(url, { timeout: 500 });
-        return response.data.numbers || [];
-      } catch (error) {
-        return [];
-      }
-    });
+    const fetchedData = await Promise.all(fetchPromises);
 
-    const results = await Promise.all(promises);
-    const allNumbers = results.flat();
+    const mergedNumbers = fetchedData
+      .flatMap(numbers => numbers)
+      .filter((number, index, self) => self.indexOf(number) === index) // Deduplicate
+      .sort((a, b) => a - b);
 
-    // Deduplicate and sort numbers in ascending order
-    const sortedNumbers = Array.from(new Set(allNumbers)).sort((a, b) => a - b);
-
-    const responseTime = Date.now() - start;
-    res.json({ numbers: sortedNumbers, responseTime });
+    res.json({ numbers: mergedNumbers });
   } catch (error) {
-    console.error('Error fetching numbers:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'An error occurred while processing data' });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Number Management Service listening at http://localhost:${port}`);
 });
